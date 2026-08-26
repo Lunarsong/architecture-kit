@@ -1,7 +1,8 @@
 # The validator suite
 
-Ten checks. Each one caught something the eye missed on the previous build, and several
-caught faults in *each other*. Build them as standalone scripts that run headless and
+Twelve checks. Each one caught something the eye missed on the previous build, and several
+caught faults in *each other* -- including two added only after a user asked "is a
+validator missing?" about a valley clipping through roof geometry. It was. Build them as standalone scripts that run headless and
 print a machine-readable summary line, so a workflow can diff them.
 
 Every validator must print **both** a human listing and one `NAME_JSON {...}` line.
