@@ -65,7 +65,8 @@ second building is what forces the parts to be genuinely modular.
 ## What you get
 
 **A kit, not a model.** Every piece is a function on a shared grid — walls, corners,
-openings, roofs, gables, dormers, chimneys, props, ground. The red cube is 1 m:
+openings, roofs, gables, dormers, chimneys, props, ground — with half and quarter sizes
+authored rather than scaled. The red cube is 1 m:
 
 ![The whole kit laid out](images/kit.jpg)
 
@@ -112,9 +113,13 @@ wall hidden behind roof       88%  ->      0%
 - **reachability** — is a defect actually visible, or sealed inside the mesh
 - **interpenetration** — solids pushed through each other
 - **through-surface** — walls emerging through roofs
+- **like-on-like** — a roof piece clipping *another roof piece*, judged against the lap the
+  design intends
 - **run continuity** — holes in a wall run
 - **members land** — does the post actually reach the beam
 - **insert scale** — does a window scale with the wall it sits in
+- **non-unit scale** — a stretched moulding, i.e. a piece that should have been authored
+  at half or quarter size
 - **determinism** — same code, same mesh, every run
 - **real-world sense** — human scale, real joinery, water runs off the roof
 
@@ -141,10 +146,10 @@ ZFIGHT_TOL=0.0005 blender -b --python assets/check_zfight.py -- walls
 
 ```
 SKILL.md                      the playbook
-references/VALIDATORS.md      10 validators, and the 4 ways a z-fight checker lies to you
+references/VALIDATORS.md      12 validators, and the 4 ways a z-fight checker lies to you
 references/FAULT-CLASSES.md   the defects that recur, so you catch them first
 references/LOOP.md            builder/auditor/critic shape and schemas
-assets/check_structure.py     through-surface + run continuity, works as-is
+assets/check_structure.py     through-surface + like-on-like + run continuity
 assets/check_zfight.py        coincident surfaces, four known faults already fixed
 ```
 

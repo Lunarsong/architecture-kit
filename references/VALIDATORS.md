@@ -182,13 +182,60 @@ side owns the sill, the head drip and the jamb linings, and write it in both fil
 
 ---
 
-## 9. Determinism
+## 9. Like-on-like intersection — the one that was missing
+
+**A family excluded from the through-surface test is never tested at all, and that is a
+blind spot, not a pass.** On the build this was distilled from, `THROUGH` listed
+`Wall, Beam, Corner, Gable` — so a ROOF piece crossing the roof was invisible to *every*
+check in the suite:
+
+- the through-surface test skipped it by construction
+- the z-fight checker could not see it, because the faces **cross** rather than being
+  coplanar
+- the object-vs-object collision count drowned it among the ~234 roof laps that are
+  legitimate
+
+Measured once someone looked: **56 valley × other-roof pairs intersecting, up to 2068
+triangle pairs**, reported by nothing. And on the very first run of the check written to
+cover it, **two eave pieces intersecting each other at 2391 tri pairs** — not a designed
+lap at all.
+
+So: for every family whose members legitimately lap each other, measure like-on-like
+intersection and **report it for judgement rather than as a failure**. Some of it is the
+design — a valley must lap the courses it closes, a ridge cap must lap both slopes. What
+you are hunting is a lap in the wrong **direction**, or far deeper than intended, or
+between two pieces that should never touch (two eave courses, two ridge caps).
+
+`assets/check_structure.py` ships this as its LIKE-ON-LIKE section, sorted by triangle-pair
+count. Read the top of the list.
+
+## 10. Non-unit scale audit — a scaled piece is a smell
+
+Scan the assembly for objects whose scale is not 1, and report them by piece.
+
+Some are legitimate — scattered props with random size variation. The ones to hunt are
+**structural pieces stretched to fill a space that should have had a purpose-made piece**.
+On the reference build, **493 of 699 placed objects (71 %) carried a non-unit scale**, and
+the worst were not props:
+
+    SM_Gable_End_2bay_A     scale (1.12, 1.0, 1.877)
+    SM_Gable_Barge_2bay     scale (1.12, 1.0, 1.877)
+    SM_Gable_WinFrame       scale (1.12, 1.0, 1.877)
+
+A bargeboard stretched 1.88× vertically and 1.12× horizontally has every moulding on it
+distorted, and its authored measurements no longer describe the placed piece — which is a
+large part of why that one member's relationship to the roof took four rounds to pin down.
+Non-uniform scale on a piece carrying mouldings is a defect even when nothing intersects.
+
+**The fix is authored fractional pieces, not better scaling.** See SKILL.md Phase 1.
+
+## 11. Determinism
 
 Build twice in one session, hash the vertices, require byte-identical output.
 
 ---
 
-## 10. Scale and real-world sense
+## 12. Scale and real-world sense
 
 Cheap, and it catches things no geometric check can:
 

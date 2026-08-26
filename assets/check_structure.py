@@ -44,7 +44,23 @@ PLANE_SNAP = 0.10   # see below
 # giving 690 / 631 / 1598 verts. CAVEAT when reading the output: a bargeboard legitimately
 # LAPS the rake, so a few centimetres is correct. Judge by DEPTH -- a lapping barge reads
 # ~0.05 m, a barge standing proud of its verge or floating off the eave reads > 0.5 m.
-THROUGH = ('Wall', 'Beam', 'Corner', 'Gable')
+# WHICH FAMILIES ARE TESTED AGAINST THE ROOF. Overridable:
+#     STRUCT_THROUGH=Wall,Beam,Corner,Gable,Roof
+#
+# READ THIS BEFORE TRUSTING A ZERO. A family absent from this tuple is NEVER TESTED, and
+# that is a blind spot, not a pass. 'Roof' is excluded here on purpose -- roof courses lap
+# each other by design, so including it floods the report -- but the consequence is that a
+# ROOF piece intersecting the roof is invisible to this check, invisible to a z-fight
+# checker (the faces cross rather than being coplanar) and lost among the legitimate laps
+# in an object-vs-object collision count. On the kit this was distilled from, a valley
+# piece clipping through slope and eave courses measured 56 intersecting pairs and up to
+# 2068 triangle pairs, and NOTHING in the suite reported it.
+# That is what the LIKE-ON-LIKE section below is for.
+THROUGH = tuple(os.environ.get("STRUCT_THROUGH",
+                               "Wall,Beam,Corner,Gable").split(","))
+# families whose members legitimately lap each other, so like-on-like intersection is
+# reported for JUDGEMENT rather than as a failure
+LIKE = tuple(os.environ.get("STRUCT_LIKE", "Roof").split(","))
 
 
 def fam(n):
@@ -59,7 +75,7 @@ def bbox(o):
 
 
 def audit(name, objs):
-    out = dict(name=name, meshes=len(objs), through=[], gaps=[])
+    out = dict(name=name, meshes=len(objs), through=[], gaps=[], like=[])
     verts, tris = [], []
     for o in objs:
         if fam(o.name) != 'Roof':
@@ -95,6 +111,42 @@ def audit(name, objs):
             if n:
                 out["through"].append(dict(piece=o.name, verts=n, depth=round(deep, 3)))
     out["through"].sort(key=lambda d: -d["depth"])
+
+    # ---- LIKE-ON-LIKE INTERSECTION -------------------------------------------
+    # Pieces of the SAME family crossing each other. Some of this is designed -- a valley
+    # must lap the courses it closes, a ridge cap must lap both slopes -- so this is a
+    # measurement for a human or an auditor to judge, NOT a pass/fail. What you are
+    # looking for is a lap in the wrong DIRECTION, or far deeper than the design intends.
+    # Sort by triangle-pair count and look at the top of the list.
+    import mathutils.bvhtree as _bt
+
+    def _tree(o):
+        me = o.evaluated_get(dg).to_mesh()
+        me.calc_loop_triangles()
+        M = o.matrix_world
+        vs = [M @ v.co for v in me.vertices]
+        ts = [tuple(t.vertices) for t in me.loop_triangles]
+        o.evaluated_get(dg).to_mesh_clear()
+        return _bt.BVHTree.FromPolygons(vs, ts)
+
+    like = [o for o in objs if fam(o.name) in LIKE]
+    if len(like) > 1:
+        boxes = {o.name: bbox(o) for o in like}
+        trees = {}
+        for i, a in enumerate(like):
+            ax0, ay0, az0, ax1, ay1, az1 = boxes[a.name]
+            for b in like[i + 1:]:
+                bx0, by0, bz0, bx1, by1, bz1 = boxes[b.name]
+                if (ax1 < bx0 or bx1 < ax0 or ay1 < by0 or by1 < ay0
+                        or az1 < bz0 or bz1 < az0):
+                    continue
+                for o in (a, b):
+                    if o.name not in trees:
+                        trees[o.name] = _tree(o)
+                n = len(trees[a.name].overlap(trees[b.name]))
+                if n:
+                    out["like"].append(dict(a=a.name, b=b.name, tri_pairs=n))
+        out["like"].sort(key=lambda d: -d["tri_pairs"])
 
     runs = collections.defaultdict(list)
     for o in objs:
@@ -165,6 +217,12 @@ for c in colls:
         note = ("   <- barge: NOT a defect, this is the board's own depth; see note"
                 if "Barge" in d["piece"] else "")
         print(f"       {d['depth']:6.3f} m  {d['verts']:5d}  {d['piece']}{note}")
+    if r.get("like"):
+        tot = sum(d["tri_pairs"] for d in r["like"])
+        print(f"    LIKE-ON-LIKE   {len(r['like'])} intersecting pairs, "
+              f"{tot} tri pairs  (JUDGE these -- some laps are designed)")
+        for d in r["like"][:6]:
+            print(f"       {d['tri_pairs']:6d}  {d['a']} x {d['b']}")
     print(f"    WALL-RUN GAPS {len(r['gaps'])}")
     for d in r["gaps"][:6]:
         print(f"       {d['size']:6.3f} m  z={d['z']:5.2f} {d['axis']}-plane "

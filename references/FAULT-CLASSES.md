@@ -129,6 +129,35 @@ move it clear or delete it.
 
 ---
 
+## Scaled to fit, instead of authored to fit
+
+A fraction of a bay or a storey is needed; a full piece is stretched to fill it.
+
+Seen as: **493 of 699 placed objects carrying a non-unit scale**, including a gable end,
+its bargeboard and its window frame all at `(1.12, 1.0, 1.877)` — every moulding on them
+distorted, and their authored dimensions no longer describing the placed piece. Also a
+window wall squashed to half width to centre a light, and a wall crushed to 0.225 for a
+jetty return. The user noticed every one of these by eye ("strange z scaling making them
+taller than their neighbours", "SM_Wall_TimberWin_2m stretching").
+
+**Check:** audit non-unit scale on the assembly (VALIDATORS.md §10). Uniform scale on a
+plain block is fine; scattered props with random size are fine. **Non-uniform scale on
+anything carrying a moulding is a defect even when nothing intersects.** Author 1/2 and 1/4
+width pieces and 1/2 and 1/3 height pieces up front.
+
+## A family excluded from a check, and therefore never checked
+
+Seen as: a through-surface test whose family list omitted `Roof`, so a roof piece crossing
+the roof was invisible to it — and invisible to the z-fight checker too, because the faces
+*cross* rather than being coplanar, and lost among the legitimate laps in an
+object-vs-object collision count. **56 intersecting pairs, up to 2068 triangle pairs,
+reported by nothing.** The first run of the check written to cover it also found two eave
+pieces intersecting each other at 2391 tri pairs, which was never a designed lap.
+
+**Check:** for every filter in every validator, ask what it excludes and whether anything
+else covers that. Write the exclusion into the tool's own output as a warning, so a zero
+cannot be misread as a pass.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate

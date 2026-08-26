@@ -104,6 +104,32 @@ and never deviate:
   lost several rounds to a 0.45 m jetty for exactly this reason, leaving a hole of exactly
   one wall thickness at every offset corner.
 
+**AUTHOR FRACTIONAL PIECES. Never scale a detailed piece to fill a gap.**
+
+A grid needs fractions, and the previous build faked all of them by scaling full pieces —
+a half-width wall to centre a gable window, a half-height wall for a band, a squashed wall
+for a jetty return, a stretched gable. Measured, **493 of 699 placed objects (71 %) carried
+a non-unit scale**, and the structural ones distort: a bargeboard placed at
+`scale (1.12, 1.0, 1.877)` has every moulding on it stretched, and its authored
+measurements stop describing the placed piece. That one member then took four rounds to
+pin down.
+
+So put fractions in the kit from the start, authored at the right size:
+
+```
+walls        1/1, 1/2, 1/4 of GRID in the run direction
+             1/1, 1/2, 1/3 of the storey in height (bands, knee walls, gable infill)
+roof         a partial panel, so the slope can end where it should
+corners      the T x T void piece, and a half-depth return
+```
+
+Rule of thumb: **if you are about to pass a non-uniform scale to a piece that carries
+mouldings, stop and author the piece instead.** Uniform scale on a plain block is fine;
+scattered props with random size are fine. A stretched moulding is not.
+
+Validator 10 in VALIDATORS.md audits this — run it on the assembly and read the
+non-uniform entries.
+
 **The eave trap, stated once so nobody rediscovers it.** At a steep pitch every metre of
 overhang drops `tan(pitch)` metres. At 52° that is 2.14, so a 0.55 m overhang puts the
 drip edge **1.18 m below the wall head** — nearly half a storey — and the roof visibly
@@ -142,9 +168,12 @@ early: they are cheap, and every one of them caught something the eye did not.
 
 **Two are shipped working in `assets/` — copy them in rather than rewriting:**
 
-- `assets/check_structure.py` — through-surface and run-continuity. Fully standalone
-  (bpy + mathutils only), runs on any assembled `.blend`. Retarget the name prefixes in
-  `fam()`, `THROUGH` and the run filter to your own convention.
+- `assets/check_structure.py` — through-surface, **like-on-like intersection** and
+  run-continuity. Fully standalone (bpy + mathutils only), runs on any assembled `.blend`.
+  Retarget the name prefixes in `fam()`, `THROUGH`, `LIKE` and the run filter to your own
+  convention. Note the warning on `THROUGH`: **a family absent from it is never tested**,
+  which is how a valley clipping through roof courses stayed invisible to an entire
+  validator suite on the previous build.
 - `assets/check_zfight.py` — coincident surfaces, with all four documented faults already
   fixed and the reasoning in its header. Exactly two integration points: your family
   registry, and `seam_planes()` (where YOUR pieces are allowed to be coincident).
