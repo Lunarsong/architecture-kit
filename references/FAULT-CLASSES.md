@@ -234,6 +234,46 @@ whether the feature you care about is in that part. Sample the piece's true enve
 its nominal footprint — and where the piece is asymmetric, make the predicate about the
 edge that carries the detail.
 
+## A guard that chooses NOTHING
+
+A threshold decides whether a piece is good enough to place, and when it fails, nothing is
+placed at all. No error, no warning — the geometry is simply absent, and absence is the one
+defect renders and most validators do not shout about.
+
+Seen as: a plate band filling the gap between a storey head and the roof datum,
+
+    bh = band_h if proud else band_h - BAND_TUCK     # 1.00 - 0.15 = 0.85
+    if bh > 0.95:
+        put(<one full bay squashed to bh>)
+
+On the three EAVE faces of the showpiece mass, `bh` came out at exactly **0.85**, failed the
+test, and **the entire band was skipped**. Measured consequence: that mass's flank walls
+stopped at z 9.050 while its own eave sat at 9.747 — a continuous **0.70 m open slot** down
+the flank, reading **56% see-through** from the street with every far ray landing on the
+inside of the far wall 11 m away. It had been there for every round, under a threshold whose
+comment explained the squashing and never mentioned that failing it placed nothing.
+
+**Check:** a guard may choose a DIFFERENT piece; it may not choose NOTHING. Any branch that
+can decline to place geometry must say so — a logged skip, a counted omission, or an
+explicit documented floor with the number in it. Grep every `if <quality test>: put(...)`
+for a missing `else`.
+
+## A rounding rule applied in one direction and not the other
+
+You work out which way to round when a run does not divide evenly — and then apply it to
+only one of the two axes it applies to.
+
+Seen as: a roof composed from authored fractions. ALONG the run the rule was written down
+and applied ("a gap shows bare deck, a lap is buried — round up"). UP the slope the same
+decomposition simply dropped a 1-2 course remainder, on the reasoning that the ridge cap
+would lap it. The cap laps 0.158 m; the remainder was up to 0.354 m. The top course fell
+from 14.074 to 13.720 against a cap underside of 13.899, turning a 0.175 m lap into a
+**0.179 m slot along the whole ridge** — visible in the first render taken afterwards.
+
+**Check:** when you write down a rounding or tie-breaking rule, list every axis and every
+stage it governs, and apply it to all of them in the same commit. Then measure the junction
+at both ends of the run, not just the one you were thinking about.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate
