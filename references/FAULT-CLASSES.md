@@ -158,6 +158,60 @@ pieces intersecting each other at 2391 tri pairs, which was never a designed lap
 else covers that. Write the exclusion into the tool's own output as a warning, so a zero
 cannot be misread as a pass.
 
+## A generated pattern anchored to a DERIVED extent
+
+A procedural pattern (glazing bars, courses, studs, paving joints) is enumerated outward
+from a bound that is itself computed from the geometry. Change the geometry a little and
+the pattern's PHASE moves, so every element jumps and the count changes
+non-monotonically.
+
+Seen as: leaded bars enumerated as `k = -reach; while k <= reach: k += step`, where
+`reach` came from the clip rectangle. Narrowing that rectangle by 160 mm took one piece
+from **4 bars to 6** -- more bars in a *smaller* opening -- and pushed it over its
+triangle budget. The module's own comment claimed "`cell` is chosen so one bar lands on
+the centre line"; that was true only by coincidence of the current `reach`, and no
+reviewer could have known which.
+
+**Check:** anchor every generated pattern on a **fixed datum** -- the centre line, a
+sill, a corner -- and enumerate `m * step` outward from it. Then a member lands on the
+datum by construction, the pattern is symmetric, and the count is monotonic in the
+opening size. If a comment asserts a property of a generated pattern, verify the property
+holds when the inputs move; test the RANGE, not the value.
+
+## A defect suppressed by a tuning constant rather than by construction
+
+The number reads zero because someone picked a value where it reads zero.
+
+Seen as: leaded glazing whose bars were clipped to the deliberately OVERSIZE pane instead
+of to the frame's inner faces, so every bar ran `rebate + overlap` (32 mm) past the
+visible aperture, out under the frame and into the host piece's boarding -- where a
+`wobble` pass spreads the boards' back faces across exactly the band the bars occupy.
+Whether a bar's back plane landed on a board's back plane was therefore a function of the
+bar offset rather than of construction, and the agent that found it said so in those terms
+-- which was the right call to escalate.
+
+**But check the fence before you quote the risk.** The larger offsets in that report
+turned out to be configurations the kit *refuses to build*: two asserts at the constant's
+own definition pin it from both sides,
+
+    assert REB >= LEAD_W * 2.6 - 0.006, "pane rebate must out-run glazing()'s reveal"
+    assert REB <= REACH - 0.001,        "pane lip must stay buried under the bead"
+
+which leaves a legal band about **2.6 mm wide**. The class was real and worth clipping to
+the structural boundary; the dramatic numbers attached to it were not reachable. Both
+halves of that are the lesson.
+
+**Check:** when a class disappears, sweep the constant that suppressed it -- and if the
+sweep fails to build, that is the answer: the constant is fenced. **Fence constants with
+asserts at the point of definition, stating both inequalities and why**, which is what
+made the bad values unreachable here and is worth copying deliberately.
+
+And the converse, which costs auditors real time: **a butt joint between two solids has
+coincident faces by definition.** Two auditors on two different families each traced the
+same frame joint from scratch and each correctly concluded there was nothing to fix.
+Document an expected coincidence *at the point in the code where it is made*, with its
+area and its reachability, so the third auditor recognises it in one read.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate

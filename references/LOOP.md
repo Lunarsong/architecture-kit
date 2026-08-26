@@ -19,6 +19,14 @@ builder tried.
   an agent measuring a fault in the *assembler* and handing back the exact line.
 - **Every helper a script re-implements locally is a fault that must be fixed twice.**
   When an agent needs a shared function to behave differently, extend it with a flag.
+- **Ownership covers the SCRATCHPAD too, not just the source tree.** Parallel agents
+  given the same session scratchpad will choose the same obvious filename for the same
+  obvious job. On the previous build two agents' measurement harnesses overwrote each
+  other at an identical path; it was harmless only because the two files happened to be
+  byte-identical, and the agent that noticed said so unprompted. A silent overwrite here
+  means one family's numbers were produced by another family's harness -- an unfalsifiable
+  measurement, which is worse than a missing one. **Give every agent a private
+  subdirectory in the brief** and say that the parent is shared.
 
 ## The brief
 
@@ -82,6 +90,10 @@ reasoned confidently about the transform that was never active.
 
 - Small fan-out. Four families plus four auditors is already enough to lose to a limit
   mid-round, and each interruption costs more in verification than the round gains.
+  Measured on the last such round: **8 agents launched, 2 completed, 6 killed by a usage
+  limit, 930k tokens spent** -- and the two survivors produced the entire result. Half the
+  fan-out would have delivered more. Prefer two families with their auditors, finished,
+  over four families abandoned.
 - One round, one theme. "Fix the barge, the joints, the rough gable, the dormer post and
   split the brace" is five rounds pretending to be one.
 - After **any** interruption: build every family before trusting any measurement, and

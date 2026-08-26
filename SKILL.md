@@ -131,11 +131,34 @@ Validator 10 in VALIDATORS.md audits this — run it on the assembly and read th
 non-uniform entries.
 
 **The eave trap, stated once so nobody rediscovers it.** At a steep pitch every metre of
-overhang drops `tan(pitch)` metres. At 52° that is 2.14, so a 0.55 m overhang puts the
+overhang drops `tan(pitch)` metres. At 65° that is 2.14, so a 0.55 m overhang puts the
 drip edge **1.18 m below the wall head** — nearly half a storey — and the roof visibly
 cuts across the facade, burying windows. Derive `EAVE_OVER` from the references as a
 *fraction of a storey*, not as an absolute you like the sound of. Measure it on the
 reference before choosing.
+
+**And use the pitch you actually BUILD, not the one in the spec.** On the reference build
+the spec said `PITCH_DEG = 52` and every piece was authored at 52°, but the assembler
+presented the roof at 65° through a global stretch (below), and the eave arithmetic used
+`tan 65 = 2.14` while the comments around it said "at 52°". `tan 52 = 1.28` — a reader
+following the stated number gets an answer 1.7× wrong, and the only reason the build was
+right is that the code used the correct constant under an incorrect name. **Name the two
+pitches differently and never let one comment claim the other.**
+
+**A trick worth copying: author at one pitch, present at another.** Authoring every roof
+piece at a single pitch is what lets any piece meet any other. If the massing then wants a
+steeper roof, do not re-author the family — stretch the whole roof world in Z by
+`ZK = tan(presented) / tan(authored)`, placing each piece at `z * ZK` with scale
+`(s, s, s * ZK)`. Every seam still meets, because a plane through a point scaled that way
+is unchanged for any `s`; layout datums convert back with `z / ZK`. One constant then
+changes the building's apparent pitch without touching a single piece.
+
+**Its one cost, which you must pre-compensate:** the stretch applies to MOULDINGS too. At
+`ZK = 1.675` every dentil, fascia, drip and shingle nose renders 1.675× taller than
+authored — on the reference build that is the un-diagnosed reason one dentil course never
+matched its reference. Author profiles pre-divided by `ZK` in the stretched axis, or
+accept and document the distortion. And say in the spec's docstring which axis is stretched,
+because any piece measured in isolation will disagree with the same piece in the assembly.
 
 **And derive the roof's length, do not round it.** If the slope is laid in whole panels,
 `n_panels × step` overshoots the wall face by up to a whole panel. Compute the true run as
