@@ -235,24 +235,47 @@ Non-uniform scale on a piece carrying mouldings is a defect even when nothing in
 **The suite tested protrusions and never tested apertures.** Validator 5 asks "did geometry
 come THROUGH the skin"; nothing asked "is there a HOLE in the skin". A hole is the
 complement of a protrusion, and on the reference build one had been sitting at a
-roof-to-cross-wing junction the whole time: ray-cast over the aperture as it appeared in a
-render, **56% of that region saw straight through the building**, every far hit landing on
-the single plane of the north wall 11 m away. Twelve validators, four rounds of critics and
-a dozen renders had not produced a number for it.
+roof-to-cross-wing junction the whole time. Twelve validators, four rounds of blind critics
+and a dozen renders had not produced a number for it. Measured from outside over the region
+a camera actually saw: **56% of that region saw straight through the building**, every far
+hit landing on one plane — the inside face of the north wall, 11 m away.
 
-Harness: put a camera where a player would stand, cast a ray per pixel over a region, and
-count rays whose hit is much farther than the surface being looked at. Two rules make it
-evidence rather than noise:
+`assets/check_holes.py` ships this. Three things had to be right before it worked, and each
+was wrong in a first version:
 
-- **Localise it.** Cast over the whole frame and 10% of rays legitimately look past near
-  geometry at the rest of the building; the figure is meaningless. Restrict the box to the
-  junction you are judging.
-- **Report the far-hit plane.** If every far hit lands on ONE plane, that plane names the
-  surface you are seeing through the building at, and the aperture is real. Scattered far
-  hits mean you are just seeing past something.
+**Cast from INSIDE, outward — not at the building.** From outside you cannot distinguish an
+aperture from "looking past the near wall at the far one": over a whole frame ~10% of rays
+legitimately do the latter, and the figure is noise. Sample interior points, fire rays in
+every direction, and a ray that escapes is by reciprocity a hole. No hand-picked junctions
+needed.
 
-Run it at every junction where two masses meet — that is where the skin is composed from
-two runs and where a closure piece is easy to forget.
+**Validate every interior sample before trusting its leaks.** The envelope bbox is stretched
+by chimneys and finials, so a naive grid puts points ABOVE the ridge — outside the building,
+where 90% of directions escape and the summary is meaningless. Require geometry overhead and
+on all four sides (not below; most kits model no floor). On the reference build that rejected
+**78 of 200 samples**. This is the same discipline as reporting controls for a reachability
+harness: an unvalidated sample is not evidence.
+
+**Report where the ray leaves the SKIN, not where it leaves the bounding box.** The first
+version logged the bbox crossing, which put the cells on whichever envelope face the ray
+happened to exit — metres from the cause, so no cluster ever formed on the junction
+responsible. The aperture is the *last point along the ray that still passes the interior
+test*; bisect for it. After that fix, **22 of 27 escaping rays localised into one band**,
+which was the junction. That mistake is worth naming: the tool reported a *proxy* for the
+thing it was measuring, which is the same class of error as measuring plane offsets at face
+centres (§2, fault 3).
+
+**Prove its sensitivity against known ground truth before trusting a zero.** Run it on two
+builds whose aperture you have measured independently. On the reference build, an aperture
+that went from 56% to 69% see-through moved this tool from **7 escaped rays to 27** — and
+both states put their top aperture cell on the same junction. A screen that cannot reproduce
+a change you already know about is not a screen.
+
+Leaks are reported **for judgement**: open eaves, arcades, galleries and a missing floor all
+leak by design. What to act on is a cluster localising to a junction between two masses —
+that is where the skin is composed from two runs and where a closure piece is easy to forget.
+Then confirm with a dense outside-in measurement over that region, which is far more
+sensitive once you know where to look.
 
 ## 14. The neighbourhood, before AND after
 

@@ -128,10 +128,11 @@ wall hidden behind roof       88%  ->      0%
 - **determinism** — same code, same mesh, every run
 - **real-world sense** — human scale, real joinery, water runs off the roof
 
-Two ship working, ready to drop in:
+Three ship working, ready to drop in:
 
 ```bash
 blender -b --python assets/check_structure.py -- out/your_scene.blend
+blender -b --python assets/check_holes.py     -- out/your_scene.blend
 ZFIGHT_TOL=0.0005 blender -b --python assets/check_zfight.py -- walls
 ```
 
@@ -155,6 +156,7 @@ references/VALIDATORS.md      14 validators, and the 4 ways a z-fight checker li
 references/FAULT-CLASSES.md   the defects that recur, so you catch them first
 references/LOOP.md            builder/auditor/critic shape and schemas
 assets/check_structure.py     through-surface + like-on-like + run continuity
+assets/check_holes.py         see-through holes, cast from inside out
 assets/check_zfight.py        coincident surfaces, four known faults already fixed
 ```
 
