@@ -4,7 +4,7 @@ A Claude Code skill that builds **modular 3D building kits** in Blender — piec
 to a grid and combine into many different buildings — then checks them with a validator
 suite and a harsh critic until they hold up.
 
-Any style: half-timber, machiya, adobe, Hausmannian, whatever you name.
+Any style: half-timber, Old City stone, machiya, adobe, Hausmannian, whatever you name.
 
 ![A medieval inn built from the kit](images/inn.jpg)
 
@@ -28,24 +28,52 @@ git clone https://github.com/Lunarsong/architecture-kit.git .claude/skills/archi
 /architecture-kit
 ```
 
-It asks you what you're building, what style, and for reference images — then builds.
+Say what you're building and attach references. It asks follow-ups, and asks for images if
+you didn't attach any.
+
+A good prompt names **the material, the roof, and at least two building types** — the
+second building is what forces the parts to be genuinely modular.
+
+### Example — medieval half-timber
+
+> `/architecture-kit`
+>
+> A medieval fantasy inn kit, slightly stylised. Stone ground floor, half-timber
+> above with cream plaster panels, steep shingled roof, dormers and tall chimneys.
+> Needs to build the inn plus a small cottage and a market row, so the parts have
+> to be modular rather than one fixed building. References attached.
+
+### Example — Old City Jerusalem
+
+> `/architecture-kit`
+>
+> An Old City Jerusalem kit. Jerusalem limestone ashlar, flat roofs with parapets
+> and small domes, arched openings with deep reveals, external stone staircases,
+> vaulted passages spanning the lane, iron window grilles. Needs to build a narrow
+> souk street and a courtyard house. Unity, about 8k tris per piece. References
+> attached.
+
+### Example — no references yet
+
+> `/architecture-kit`
+>
+> I want a Cyclades village kit but I don't have references — can you tell me what
+> you need and I'll find them?
 
 ---
 
 ## What you get
 
-**A kit, not a model.** Every piece is a function on a shared grid, so the same parts make
-different buildings:
+**A kit, not a model.** Every piece is a function on a shared grid — walls, corners,
+openings, roofs, gables, dormers, chimneys, props, ground. The red cube is 1 m:
+
+![The whole kit laid out](images/kit.jpg)
+
+**The same parts make different buildings:**
 
 ![Three buildings from the same kit](images/layouts.jpg)
 
-**Pieces that actually fit.** Wall origins at bay centres, corners filling the voids
-between runs, one roof pitch kit-wide:
-
-![Family lineup](images/family.jpg)
-
-**Real construction.** Arcades, galleries, jetties, proper joints — measured against your
-references:
+**Real construction** — arcades, galleries, jetties, joints that exist in the real world:
 
 ![Arcade and gallery](images/market-row.jpg)
 
@@ -66,13 +94,13 @@ Three roles, fresh context each, and none of them grade their own homework:
 | **auditor** | owns nothing, re-measures the builder's numbers, hunts for more |
 | **critic** | sees two images side by side, labels stripped, picks one |
 
-Findings come back as numbers, so a fix is provable:
-
-![Before and after](images/before-after.jpg)
+Findings come back as numbers, so a fix is provable rather than asserted:
 
 ```
-worst clearance   0.684 m  ->  0.485 m
-verts > 0.25 m       968   ->     655
+barge worst clearance    0.684 m  ->  0.485 m
+verts more than 0.25 m      968   ->     655
+eave drop below wall head  1.53 m  ->  0.29 m
+wall hidden behind roof       88%  ->      0%
 ```
 
 ---
@@ -90,7 +118,7 @@ verts > 0.25 m       968   ->     655
 - **determinism** — same code, same mesh, every run
 - **real-world sense** — human scale, real joinery, water runs off the roof
 
-Two of these ship working, ready to drop in:
+Two ship working, ready to drop in:
 
 ```bash
 blender -b --python assets/check_structure.py -- out/your_scene.blend
@@ -105,6 +133,7 @@ ZFIGHT_TOL=0.0005 blender -b --python assets/check_zfight.py -- walls
 - `.blend` and `.glb`, round-tripped and reported
 - a local progress page with every family render and every finding
 - per-family renders: demo, closeup, lineup, tiled
+- a whole-kit sheet with a 1 m reference cube
 
 ---
 
