@@ -212,6 +212,28 @@ same frame joint from scratch and each correctly concluded there was nothing to 
 Document an expected coincidence *at the point in the code where it is made*, with its
 area and its reachability, so the third auditor recognises it in one read.
 
+## An all-or-nothing guard on a piece whose defect lives at one edge
+
+A placement guard asks "is this tile entirely inside another mass?" and lays the tile
+whenever any part of it is clear. But the feature that matters is not spread evenly across
+the piece — it sits at one edge.
+
+Seen as: a roof eave-course guard requiring BOTH the downslope and the upslope edge to be
+under another roof before it would skip a tile. At four junctions the other mass's surface
+stood 0.580, 0.291, 1.007 and 0.009 m ABOVE the tile's own anchor plane at its DOWNSLOPE
+edge, while the upslope edge came out clear — so each tile read as "not buried" and was
+laid whole. The eave's fascia, dentil course, drip and bell-cast all live at the downslope
+edge, i.e. entirely inside the neighbour. One junction had a fascia and its dentil course
+sitting in the middle of a shingle field, visible in any render of that corner.
+
+Compounding it: the guard sampled a footprint of one nominal tile depth (0.985 m) for a
+piece 1.450 m deep across the slope — the swept 0.465 m was tested by nothing.
+
+**Check:** for every guard, ask WHICH PART of the piece the guard's answer is about, and
+whether the feature you care about is in that part. Sample the piece's true envelope, not
+its nominal footprint — and where the piece is asymmetric, make the predicate about the
+edge that carries the detail.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate

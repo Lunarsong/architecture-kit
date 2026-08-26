@@ -1,6 +1,6 @@
 # The validator suite
 
-Twelve checks. Each one caught something the eye missed on the previous build, and several
+Fourteen checks. Each one caught something the eye missed on the previous build, and several
 caught faults in *each other* -- including two added only after a user asked "is a
 validator missing?" about a valley clipping through roof geometry. It was. Build them as standalone scripts that run headless and
 print a machine-readable summary line, so a workflow can diff them.
@@ -229,6 +229,45 @@ large part of why that one member's relationship to the roof took four rounds to
 Non-uniform scale on a piece carrying mouldings is a defect even when nothing intersects.
 
 **The fix is authored fractional pieces, not better scaling.** See SKILL.md Phase 1.
+
+## 13. See-through holes — the complement nothing was testing
+
+**The suite tested protrusions and never tested apertures.** Validator 5 asks "did geometry
+come THROUGH the skin"; nothing asked "is there a HOLE in the skin". A hole is the
+complement of a protrusion, and on the reference build one had been sitting at a
+roof-to-cross-wing junction the whole time: ray-cast over the aperture as it appeared in a
+render, **56% of that region saw straight through the building**, every far hit landing on
+the single plane of the north wall 11 m away. Twelve validators, four rounds of critics and
+a dozen renders had not produced a number for it.
+
+Harness: put a camera where a player would stand, cast a ray per pixel over a region, and
+count rays whose hit is much farther than the surface being looked at. Two rules make it
+evidence rather than noise:
+
+- **Localise it.** Cast over the whole frame and 10% of rays legitimately look past near
+  geometry at the rest of the building; the figure is meaningless. Restrict the box to the
+  junction you are judging.
+- **Report the far-hit plane.** If every far hit lands on ONE plane, that plane names the
+  surface you are seeing through the building at, and the aperture is real. Scattered far
+  hits mean you are just seeing past something.
+
+Run it at every junction where two masses meet — that is where the skin is composed from
+two runs and where a closure piece is easy to forget.
+
+## 14. The neighbourhood, before AND after
+
+**Removing a defect can enlarge a second defect that the first one was accidentally
+masking.** On the reference build, trimming four eave assemblies out of the neighbouring
+roof planes they were buried in — a clear, measured win (24 like-on-like pairs to 12, four
+deep interpenetrations at 1.06-1.10 m to zero, worst pair 1220 triangle-pairs to 48) —
+also removed roof edge that had been covering part of a hole, and took that aperture from
+**56% to 69% see-through**. Both measurements were right. Reporting only the first would
+have been a lie of omission.
+
+**Check:** for any fix that REMOVES geometry, measure the surrounding junction before and
+after, not just the metric you set out to move. State both. A fix whose net effect is
+unknown is not finished, and an intermediate state that is worse in one place is fine to
+keep — as long as you say so and say what closes it.
 
 ## 11. Determinism
 
