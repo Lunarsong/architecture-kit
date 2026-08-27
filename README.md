@@ -116,6 +116,9 @@ wall hidden behind roof       88%  ->      0%
 - **see-through holes** — the complement nobody tests: a *hole* in the skin, not a
   protrusion through it. One sat at a roof junction at 56% see-through while twelve other
   checks passed
+- **exposed interior surfaces** — not the same defect as a hole, and it survives the hole
+  check: paint the "inside" material bright and render from outside. Anything that glows
+  is facing the wrong way
 - **like-on-like** — a roof piece clipping *another roof piece*, judged against the lap the
   design intends
 - **run continuity** — holes in a wall run
@@ -152,7 +155,7 @@ ZFIGHT_TOL=0.0005 blender -b --python assets/check_zfight.py -- walls
 
 ```
 SKILL.md                      the playbook
-references/VALIDATORS.md      14 validators, and the 4 ways a z-fight checker lies to you
+references/VALIDATORS.md      15 validators, and the 4 ways a z-fight checker lies to you
 references/FAULT-CLASSES.md   the defects that recur, so you catch them first
 references/LOOP.md            builder/auditor/critic shape and schemas
 assets/check_structure.py     through-surface + like-on-like + run continuity

@@ -1,6 +1,6 @@
 # The validator suite
 
-Fourteen checks. Each one caught something the eye missed on the previous build, and several
+Fifteen checks. Each one caught something the eye missed on the previous build, and several
 caught faults in *each other* -- including two added only after a user asked "is a
 validator missing?" about a valley clipping through roof geometry. It was. Build them as standalone scripts that run headless and
 print a machine-readable summary line, so a workflow can diff them.
@@ -291,6 +291,37 @@ have been a lie of omission.
 after, not just the metric you set out to move. State both. A fix whose net effect is
 unknown is not finished, and an intermediate state that is worse in one place is fine to
 keep — as long as you say so and say what closes it.
+
+## 15. Exposed interior surfaces — and the material-swap oracle
+
+**A hole and an exposed inside face are different defects, and passing §13 does not catch
+this one.** On the reference build `check_holes.py` reported **0 escaping rays** across three
+buildings while one of them had the BACK of a wall panel plainly visible from the street at a
+re-entrant corner. Nothing was see-through; a surface that should never face outward simply
+did.
+
+The cheap, decisive instrument: give the "inside" material a **flat emission colour nothing
+else in the scene uses**, and render the building from outside. Anything that glows is an
+interior surface facing out. It needs no ray budget, no sampling decisions and no tolerance,
+and it localises the defect to the pixel. On the reference build it lit exactly one region
+out of 58 material slots — and everything else in that building was confirmed correct in the
+same render.
+
+Kits usually already have the material for it: a panel's back, a wall's core, a deck's
+underside are commonly authored in their own material precisely so they can be shaded dimly.
+
+**The trap that made the first run of this a FALSE ALL-CLEAR.** Setting `Base Color`'s
+`default_value` on the existing material changed nothing, because that input was **LINKED**
+— the kit drives colour from a vertex-colour attribute, and a linked socket ignores its
+default. The render came back with no magenta anywhere and looked like a clean bill of
+health. **Replace the material in every slot instead**, and prove the instrument by running
+it while the defect is known to be present: if it cannot show a fault you already know about,
+it cannot clear you of one you don't.
+
+Companion trap, from the same session: **a camera aimed at a target ON a surface can end up
+INSIDE the building**, where every wall shows its back and everything looks broken. One
+diagnosis was lost to that before the framing was checked. Sanity-check that a diagnostic
+render actually looks like the view you meant.
 
 ## 11. Determinism
 

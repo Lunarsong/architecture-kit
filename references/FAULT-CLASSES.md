@@ -274,6 +274,41 @@ from 14.074 to 13.720 against a cap underside of 13.899, turning a 0.175 m lap i
 stage it governs, and apply it to all of them in the same commit. Then measure the junction
 at both ends of the run, not just the one you were thinking about.
 
+## A diagnostic that cannot fail, and therefore cannot clear you
+
+The instrument runs, prints a clean result, and was never connected to the thing it claims
+to measure.
+
+Seen as: a material-swap test for exposed interior faces that set `Base Color`'s
+`default_value` on an existing material whose Base Color input was **LINKED** to a
+vertex-colour node. A linked socket ignores its default, so the "highlight" was never
+applied; the render showed no highlight anywhere and read as proof that the defect did not
+exist. It did — the corrected version, which replaced the material in every slot, lit it
+immediately.
+
+Also seen as: a diagnostic camera aimed at a point ON a wall, which put the camera INSIDE
+the building, where every surface shows its back face and the whole model looks broken.
+
+**Check:** run every new instrument once against a state where the fault is KNOWN to be
+present, and require it to fire. An instrument that has never produced a positive is not
+evidence of a negative. This is the same discipline as reporting controls for a reachability
+harness (VALIDATORS.md §3), applied to the instrument's *wiring* rather than its numbers.
+
+## One storey closes a junction and the storey above it does not
+
+Two storeys share a plan, and the closure pieces at an awkward junction are placed by hand
+for one of them and forgotten for the other.
+
+Seen as: an L-plan's re-entrant inner corner. The stone ground storey closed the armpit with
+two part bays and an inner-corner piece, three explicit placements. The timber storey above
+it placed **none of the three** — and its own comment stated the geometry it needed
+("the armpit's two part bays are 0.12 longer up here than they are below") and then never
+acted on it. Result: the back face of a wall panel visible from the street.
+
+**Check:** wherever a junction is closed by hand-placed pieces rather than by the bay loop,
+grep for that closure at EVERY storey which shares the plan, and diff the lists. A comment
+that describes a placement is not a placement.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate
