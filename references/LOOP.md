@@ -109,3 +109,19 @@ judgement as reversible, and said which part of the improvement actually came fr
 somewhere else.
 
 That is the behaviour to reward, and the brief should say so.
+
+It happened twice more on the next round, and both times the agent was right and the
+orchestrator was wrong:
+
+- Briefed to author a HALF-WIDTH window bay, an agent replied that it is arithmetically
+  impossible: the opening in the shared spec is 1.50 m wide and a half bay is 1.00 m. It
+  substituted the only other spec opening whose insert fits and proved the contract in both
+  directions. **Check your brief against the spec's own numbers before sending it.**
+- Offered a cheaper decomposition (author one part-height piece and let an existing beam
+  cover the remainder), an agent measured the beam and refused: its body spans y -0.481 to
+  +0.050, i.e. it sits entirely IN FRONT of the wall, so it would have HIDDEN 0.19 x 0.15 m
+  of open section per bay rather than filled it — the same void, behind a beam. It authored
+  both heights instead.
+
+The second one is the pattern to notice: *hidden* and *closed* are different, and only a
+measurement tells them apart. An orchestrator looking at a render cannot.
