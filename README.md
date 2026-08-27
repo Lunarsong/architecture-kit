@@ -162,7 +162,16 @@ assets/check_zfight.py        coincident surfaces, four known faults already fix
 
 ---
 
-Images are from the medieval inn kit this skill was distilled from — 153 pieces, 14
-families, four buildings.
+## The kit this was distilled from
+
+Every image above comes from one build: a medieval half-timber kit of **182 pieces across
+14 families**, making an inn, a market row, a cottage and an L-plan cross-wing. The whole
+thing — pieces, generator scripts, validators, and prebuilt `.blend` and `.glb` — is
+public, so you can see what this skill's output actually looks like before running it:
+
+**→ [Lunarsong/medieval-architecture-kit](https://github.com/Lunarsong/medieval-architecture-kit)**
+
+Its README also lists what is still open, with the measurement for each — which is the
+habit this skill is really trying to teach.
 
 MIT licensed.
