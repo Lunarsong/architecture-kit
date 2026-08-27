@@ -20,6 +20,11 @@ Runs inside `Part.finish()` on every build.
 **Report, never silently repair.** Auto-clamping hid quoins crushed by 0.255 m and dormer
 tops by 0.101 m. Emit a `CLAMP` line and a non-empty `report`.
 
+**And make every validator print the file it actually opened, as its first line.** One check
+on the reference build took no path argument and rebuilt the showpiece instead of reading the
+file it was pointed at, so a whole set of "before" numbers described a different building.
+Nobody noticed until an agent read the script rather than just running it.
+
 Gate: *every piece reports EMPTY, tri budgets included.*
 
 ---

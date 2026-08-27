@@ -309,6 +309,38 @@ acted on it. Result: the back face of a wall panel visible from the street.
 grep for that closure at EVERY storey which shares the plan, and diff the lists. A comment
 that describes a placement is not a placement.
 
+## A filter that keeps the BEST candidate instead of every valid one
+
+A routine picks the longest, largest or nearest match and returns it — when the correct
+answer was *all of them*.
+
+Seen as: a roof-tile trimmer that sampled a bay along its length, found the contiguous
+stretches not buried inside another mass, and returned only the LONGEST. A bay interrupted
+in the middle by another mass is perfectly good on both sides of it, and the short side was
+silently discarded: one run had clear stretches of **6.16 m and 0.16 m** and only the first
+was ever laid, leaving an open wedge of sky at the far end. The same routine had been in
+place for every round, and the discarded stretch never appeared in any report because
+nothing counted roof that was *absent*.
+
+**Check:** for every `best = max(...)` over candidates, ask whether the runners-up were
+invalid or merely smaller. If they were merely smaller, return the list. And prefer a name
+that says so — `clear_runs`, not `clear_run`.
+
+## The validator measured a different model than you thought
+
+You pass a path; the script ignores it and rebuilds something else; the numbers look
+plausible and describe the wrong scene.
+
+Seen as: `check_collisions.py -- out/layouts.blend`. That script takes no path argument at
+all — without `--loaded` it imports the assembler and builds the SHOWPIECE, then reports on
+that. Every "before" number gathered that way described a different building. The script's
+own header documents the correct form (`blender -b <file> --python check_collisions.py --
+--loaded`), and an agent caught it by reading the file the orchestrator had only invoked.
+
+**Check:** read a validator's usage line before quoting its output, and make each one print
+the file it actually opened as the first line of its report. A tool that cannot be
+mis-pointed is better than a convention nobody re-reads.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate
