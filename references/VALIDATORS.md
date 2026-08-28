@@ -1,6 +1,6 @@
 # The validator suite
 
-Sixteen checks. Each one caught something the eye missed on the previous build, and several
+Seventeen checks. Each one caught something the eye missed on the previous build, and several
 caught faults in *each other* -- including two added only after a user asked "is a
 validator missing?" about a valley clipping through roof geometry. It was. Build them as standalone scripts that run headless and
 print a machine-readable summary line, so a workflow can diff them.
@@ -393,6 +393,68 @@ Write these down as constants, not as habits, so they can be checked:
     CLONE_MAX         <= 2 identical meshes consecutively
     GABLE_SYMMETRY    a gable end is symmetric about its centre: piece i and piece
                       n-1-i are the same piece, opposite hands
+
+## 17. Does every member LAND? — the most-reported fault, finally tooled
+
+This file listed the check at §7 from round one and **nobody built it for seventeen rounds**,
+while it remained the single most-reported fault class on the build — and the user spotted
+**every instance by eye before any tool did**. `assets/check_lands.py` ships it.
+
+The naive version is unusable, and the numbers say why: judged per mesh island it reported
+**541 fault classes**. Tuned, the same scene reports **10**. Four gates did that, and two of
+them are not the ones you would guess.
+
+**Collapse to the FAULT, not the vertex.** Key findings on `(piece base name, end, carrier base
+name)` — strip the `.001` suffix AND the island index — so one authored fault is one row
+carrying its worst instance plus "N ends in M places". Merge reciprocal pairs (a post head on a
+barge, and that barge's foot on the post, same gap) as one joint.
+
+**A joint is COMPACT; a seam is not.** `MAX_END = 0.50 m` across in plan was the strongest gate
+in the file: 10 classes at 0.50, **31 with no limit**. A 2 m wall head, a 1.42 m dormer cheek, a
+7.3 m barge edge are SEAMS, and whether a seam closes along its length is §5's question, not
+this one.
+
+**Measure bearing from the END BAND, not the island bbox.** A raking member's bbox plan is the
+run of its diagonal, so a dormer verge scored **0.735 m of "bearing" it does not have** when its
+band is 0.02–0.04 m. This is what separates a post's real cut end from a rake tip.
+
+**An AXIAL end only.** A horizontal collar's top is a FACE — nothing bears there. Without this
+rule a cambered apex collar was reported REAL against *the next collar up*.
+
+Then: pierce non-carriers (props, lanterns, flower boxes) rather than stopping on them, so the
+real surface behind is still measured; require the carrier surface to FACE the end
+(`|normal.z| >= 0.30`); and annotate raking families rather than filtering them, as §5 does.
+
+**Two gates were added and then REMOVED after measuring** — per-target coverage at 0.50 (it
+kills the known positive, because the post sits under a corner cell and only 36% of its rays
+reach) and a masonry family exclusion (once the joint and axial gates existed it bought one
+class, i.e. a blind spot for nothing). Removing a gate you cannot justify is as much the work as
+adding one.
+
+**Thresholds are NOT monotonic**, and this is the trap: rejecting a near carrier PROMOTES the
+next one down rather than silencing the end. `MIN_BEAR` 0.020 → 8 classes, 0.060 → 10, 0.100 →
+12, 0.200 → 2 *and the known positive is lost*. **Tune on the control, not on the count.**
+
+### What it CANNOT see, measured rather than assumed
+
+Of five historical faults, **two are unreachable by any threshold** and that belongs in the
+docstring, not in a footnote:
+
+- **A curved arch brace's head presents a SEAM, not a joint.** Its end band measures
+  0.892 × 0.003 m — a near-level arc along its whole length. Widening `MAX_END` to admit it
+  re-admits every wall head in the building.
+- **A pendant hanging THROUGH its bargeboards** interpenetrates what it should meet, so a ray
+  from its head hits at zero or negative distance and correctly reads LANDS. A gap and an
+  overlap are complements; the collision checker owns the other half.
+
+A third — a king post short of a rake soffit — is reachable but under-judged as LAP rather than
+REAL. Six of ten rows on the reference build are LAP: the carrier reaches past the end in z, so
+the two meet *somewhere* and the air is local to one (x, y). That is deliberately NOT gated,
+because a king post under a rake soffit has the identical signature. The label says look anyway.
+
+**Build a PROBE mode.** `-- scene.blend <objectname>` dumps every end of one object with its
+full measurement and verdict regardless of gates, and says NO SUCH CANDIDATE loudly. Given how
+many instruments have silently passed on this project, re-running a control must be a one-liner.
 
 ## 11. Determinism
 
