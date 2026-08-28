@@ -407,6 +407,28 @@ discriminate and you have added noise, not coverage. Then find the measurement t
 discriminate — here, the placed extent against the ridge piece's far face — and write it into
 the check's comment so the next person does not re-add the family.
 
+## An edit anchored on a pattern that is not there, landing silently elsewhere
+
+You insert code by searching for a landmark — the end of a docstring, a closing brace, a
+comment — and the landmark is absent in the target. The search finds the NEXT match, which
+belongs to a different function, and the insertion succeeds without error.
+
+Seen as: a fix to make a lighting rig's `sun()` replace the existing sun instead of
+accumulating another one. The block was inserted after "the end of sun()'s docstring" —
+and `sun()` has no docstring, so it landed inside `ground()`. The look preset calls
+`ground()` LAST, after `sun()`, so **the ground function deleted the key sun on every
+render**: mean frame luminance 0.4240 to 0.2518, crushed blacks 9.63% to 38.74%, and
+**0.000% of the frame above L230 — no direct light in the picture at all.**
+
+Every geometry check passed. Every piece reported clean. The placed counts were identical.
+The defect was invisible to the entire validator suite because it was not geometry, and it
+was caught by the user looking at a picture and saying the renders seemed darker.
+
+**Check:** after any pattern-anchored insertion, assert that the inserted text is inside the
+function you meant — grep for it and print the nearest preceding `def`. And when a change is
+supposed to alter behaviour, measure the behaviour: one render and one mean-luminance number
+would have caught this immediately. A change that "should be equivalent" is a hypothesis.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate
