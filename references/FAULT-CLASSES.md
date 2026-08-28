@@ -429,6 +429,26 @@ function you meant — grep for it and print the nearest preceding `def`. And wh
 supposed to alter behaviour, measure the behaviour: one render and one mean-luminance number
 would have caught this immediately. A change that "should be equivalent" is a hypothesis.
 
+## Composition read as random, when every piece is individually correct
+
+No geometric check fires. Nothing intersects, nothing gaps, every member lands. The elevation
+still looks scattered, and the user says so before any tool does.
+
+Seen as, on one building, all four at once:
+- handedness alternating on the BAY INDEX, so a skipped bay left two pieces of the same hand
+  adjacent -- correct about position, wrong about adjacency;
+- the alternation counter resetting per code-level call rather than per VISUAL run, so two
+  masses sharing a facade plane broke the pattern at their junction;
+- variant and hand perfectly correlated, so a twelve-bay facade showed **2 of 4 possible bay
+  appearances** and read as repetitive even though the braces alternated correctly;
+- three dormers with gap CoV 0.000 -- perfectly regular -- whose centroid sat **+28.2% of the
+  facade width off centre**, bunched at one end of a long range.
+
+**Check:** VALIDATORS.md §16, and declare the convention in the spec as a constant rather than
+leaving it as a habit in two code paths. The deeper lesson: geometry checks answer "is this
+built correctly", and nothing answered "is this composed". Both are needed, and the second one
+is the one a user notices first.
+
 ## Tool faults masquerading as defects
 
 **Assume your measurement is wrong before you assume the geometry is.** Four separate

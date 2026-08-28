@@ -1,6 +1,6 @@
 # The validator suite
 
-Fifteen checks. Each one caught something the eye missed on the previous build, and several
+Sixteen checks. Each one caught something the eye missed on the previous build, and several
 caught faults in *each other* -- including two added only after a user asked "is a
 validator missing?" about a valley clipping through roof geometry. It was. Build them as standalone scripts that run headless and
 print a machine-readable summary line, so a workflow can diff them.
@@ -327,6 +327,72 @@ Companion trap, from the same session: **a camera aimed at a target ON a surface
 INSIDE the building**, where every wall shows its back and everything looks broken. One
 diagnosis was lost to that before the framing was checked. Sanity-check that a diagnostic
 render actually looks like the view you meant.
+
+## 16. Composition — the class every geometric check is blind to
+
+**A building can pass every other check in this file and still look wrong**, because the
+fault is in the ARRANGEMENT rather than the geometry. Nothing intersects, nothing gaps,
+every member lands — and the elevation still reads as scattered.
+
+On the reference build the user reported this class **four separate times, by eye, and no
+validator ever saw it**: *"they appear built in a disjointed, incoherent manner"*, *"why is
+there three of the same side of the arc"*, *"dormer windows seem to be placed randomly with no
+account to symmetry, composition, similarity or sense"*, *"Dormers were literally the same
+object three times"*.
+
+`assets/check_composition.py` ships it. Four measurements, all reported **for judgement** —
+there is no pass/fail, because whether a facade should be symmetric is an authored decision.
+The point is that the decision becomes a NUMBER instead of an accident.
+
+**1. Handedness along every run.** A handed piece (an arched brace leans) must obey a stated
+convention. Two are legitimate:
+
+    ALTERNATE   L R L R L R    every piece beside its own reflection; braces zig-zag
+    SPLAY       L L L R R R    braces splay outward from the middle, one flip at the centre
+
+What is not legitimate is NEITHER, which is what you get when two code paths disagree. Three
+things make this go wrong, and all three were live on the reference build:
+
+- **alternating on the bay INDEX rather than on the ordinal among PLACED pieces.** A skipped
+  bay (a dormer bay, or one buried in another mass) removes a piece, so the two pieces
+  flanking the hole are two indices apart — same parity, SAME HAND. Correct about position,
+  wrong about adjacency, and adjacency is what the eye reads.
+- **a counter that resets per code-level call rather than per VISUAL run.** Two masses sharing
+  a facade plane are one run to the eye. Each was internally correct and the junction showed
+  `...L | L...`.
+- **exclude families that have no hand.** Stone does not; judging it reported
+  `LLLLLLLLLLLL` as "NEITHER" on the first run of the tool, and a checker that cries wolf
+  gets ignored.
+
+**2. Distinct appearances.** If hand is tied to bay parity and the variant alternates too,
+variant and hand become perfectly correlated — variant A is always left, B always right — and
+a twelve-bay facade shows **2 of 4 possible appearances**. The braces alternate correctly and
+the wall still reads as repetitive. Measure `len(set(zip(variant, hand)))` against
+`min(2 × nvariants, n)`. This is the metric that catches "three of the same side of the arc"
+when the pieces are not even adjacent.
+
+**3. Rhythm of repeated features.** Gap spacing, its coefficient of variation, and **where the
+group's centroid sits relative to the facade centre**. Three dormers evenly spaced at one end
+of a long range are regular LOCALLY and incoherent GLOBALLY, and only the centroid figure sees
+it: on the reference build the dormer gaps had CoV 0.000 and the centroid sat **+28.2% of the
+facade width off centre**.
+
+**4. Clones.** Consecutive identical mesh datablocks. A four-entry variant table picked by
+POSITION HASH lands on one entry about one run in sixteen; step the index instead.
+
+### The ruleset to declare in your spec
+
+Write these down as constants, not as habits, so they can be checked:
+
+    HAND_CONVENTION   per face: ALTERNATE (default) or SPLAY (gable ends)
+    HAND_ORDINAL      alternate on the ordinal among PLACED pieces of the VISUAL run
+    APPEARANCE_MIN    a run of n bays shows >= min(2 x nvariants, n, 4) appearances
+    RHYTHM_COV        a repeated feature group: gap CoV <= 0.05
+    RHYTHM_CENTROID   its centroid within +/-10% of the facade centre, unless the
+                      asymmetry is authored AND stated
+    CLONE_MAX         <= 2 identical meshes consecutively
+    GABLE_SYMMETRY    a gable end is symmetric about its centre: piece i and piece
+                      n-1-i are the same piece, opposite hands
 
 ## 11. Determinism
 
