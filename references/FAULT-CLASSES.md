@@ -289,6 +289,14 @@ immediately.
 Also seen as: a diagnostic camera aimed at a point ON a wall, which put the camera INSIDE
 the building, where every surface shows its back face and the whole model looks broken.
 
+And a third time, in the same project, in the lighting rig: `sun()` and `area()` created a new
+light object on every call and never removed the previous one, so a look preset followed by
+`sun(energy=0)` left `KeySun 22.0 W` sitting beside `KeySun.001 0.0 W`. The resulting "sun
+off" control render was **56.5% bit-identical to the lit one**, and it was presented to the
+user as evidence that a tonal seam was not a shadow. It was a shadow-lit render all along.
+Three instruments, three silent passes, one project. **Assume your instrument is lying until
+you have seen it fire.**
+
 **Check:** run every new instrument once against a state where the fault is KNOWN to be
 present, and require it to fire. An instrument that has never produced a positive is not
 evidence of a negative. This is the same discipline as reporting controls for a reachability
@@ -340,6 +348,64 @@ own header documents the correct form (`blender -b <file> --python check_collisi
 **Check:** read a validator's usage line before quoting its output, and make each one print
 the file it actually opened as the first line of its report. A tool that cannot be
 mis-pointed is better than a convention nobody re-reads.
+
+## Two stages disagree about which objects they are processing
+
+One stage of the pipeline is given a filtered object set for good reasons; a later stage uses
+a different default and processes a different set. Neither stage is wrong on its own.
+
+Seen as: a glTF export. The UV/finalise stage was handed one representative object per shared
+mesh, *excluding* a hidden `_library` collection — correct, and deliberate, because
+unwrapping 743 objects instead of 102 is wasted work. But the exporter's own `use_visible`
+defaults to **False**, so it shipped all 182 hidden library pieces anyway: 92 of 194 mesh
+datablocks with no UV layer at all, 278,027 stray triangles, and the entire piece library
+stacked at the world origin — a duplicate staircase, gallery balustrade and porch canopy
+jutting out through the front facade of the shipped model, with 76 street-level rays' worth
+lying outside the building silhouette. One keyword fixed it and took the file from 23.9 MB to
+16.1 MB.
+
+Note the wrong diagnosis it survived: "the exporter prunes a UV layer no material
+references." Plausible, wrong, and it would have sent the fix into the material graph.
+
+**Check:** for every export or bake, print the object COUNT the stage processed and the count
+the stage before it processed, and require them to match or to differ by a number you can
+name. And read the defaults of any tool you call — `use_visible=False` is a default, not a
+bug.
+
+## A constant whose NAME says one thing and whose VALUE says another
+
+Seen as: `TAN_R = S.SIN_P / S.COS_P`, with the comment `# 52 deg field pitch`, in a module
+whose 22 uses of it all mean "the field this piece is planted in" — while the field is
+actually *presented* at 65 degrees through a global stretch, and this piece is deliberately
+placed unstretched. The piece was cut 0.463 m too long and burst through the main ridge on
+10 of 11 placed instances, on two buildings, for the entire life of the project.
+
+Two things follow. First, **it was the DEFINITION, not the call sites**: an earlier attempt
+patched the single most obvious site and left the other 21 cutting for the wrong pitch, which
+crushed 173 vertices flat onto a seam. Audit every use before deciding where the fix goes —
+if they all mean the same thing, one line fixes it and sixteen lines do not.
+Second, when the pitch changed, a *different* piece in the same module inverted its own
+profile — and its docstring records it being fixed once already for exactly that fault, at
+the old value. **A piece tuned to one value of a shared constant will break at the next one;
+derive it.**
+
+## Adding a family to a check that it legitimately trips
+
+The mirror image of the blind-spot fault, and easy to commit immediately after learning that
+one.
+
+Seen as: a through-surface test whose family list omitted `Dormer`. Adding it looked like
+closing a blind spot — and it duly reported all six placed dormers. But a dormer EMERGES
+through the roof by design: it is planted in a slope, so every vertex has roof below and none
+above, which is precisely what the test looks for. It reported the identical depth (3.270 m)
+before and after a fix that measurably shortened the piece by 0.506 m. The number was the
+dormer's height above the field, not its over-run.
+
+**Check:** before adding a family to a filter, ask what the check would report for a
+*correct* member of that family. If the answer is "a large number", the check cannot
+discriminate and you have added noise, not coverage. Then find the measurement that does
+discriminate — here, the placed extent against the ridge piece's far face — and write it into
+the check's comment so the next person does not re-add the family.
 
 ## Tool faults masquerading as defects
 
